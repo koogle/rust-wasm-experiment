@@ -67,6 +67,7 @@ impl Game {
     }
 
     pub fn update(&mut self) {
+        self.text_input.update();
         //let now = Instant::now();
         //let dt = now.duration_since(self.last_update);
         //self.last_update = now;
@@ -110,7 +111,7 @@ impl Game {
         input_label.render(
             &self.context,
             self.width as f64 / 2.0,
-            self.height as f64 / 2.0 + 60.0,
+            self.height as f64 / 2.0 + 80.0,
         );
     }
 
@@ -123,6 +124,7 @@ impl Game {
         if key == "Enter" {
             self.is_start_screen = false;
         }
+        self.text_input.handle_key_press(&key);
     }
 
     pub fn handle_click(&mut self, x: f64, y: f64) {
