@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>WASM Canvas Game</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      #game-canvas {
+        width: 100%;
+        height: 100%;
+      }
+      #error-message {
+        color: red;
+        font-family: "Press Start 2P", cursive;
+        text-align: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="game-canvas"></canvas>
+    <div id="error-message"></div>
+    <script type="module">
+      const errorMessage = document.getElementById("error-message");
+
+      async function loadWasm() {
+        try {
+          const response = await fetch("./pkg/hunter_game.js");
+          if (!response.ok) {
+            throw new Error(
+              `Failed to load WASM file: ${response.status} ${response.statusText}`
+            );
+          }
+          const { default: init, Game } = await import("./pkg/hunter_game.js");
+          return { init, Game };
+        } catch (error) {
+          errorMessage.textContent = `Error: ${error.message}`;
+          console.error("Failed to load WASM:", error);
+          throw error;
+        }
+      }
+
+      async function run() {
+        try {
+          const { init, Game } = await loadWasm();
+          await init();
+
+          const canvas = document.getElementById("game-canvas");
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+
+          const game = new Game();
+
+          function gameLoop() {
+            game.update();
+            game.render();
+            requestAnimationFrame(gameLoop);
+          }
+
+          gameLoop();
+
+          canvas.addEventListener("mousemove", (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            game.handle_mouse_move(x, y);
+          });
+
+          canvas.addEventListener("click", (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            game.handle_click(x, y);
+          });
+
+          canvas.addEventListener("keydown", (event) => {
+            game.handle_keydown(event.key);
+          });
+        } catch (error) {
+          console.error("Failed to initialize game:", error);
+        }
+      }
+
+      run();
+
+      // Live reload
+      const scriptCheckInterval = 1000; // Check every second
+      let lastModified = 0;
+
+      async function checkForUpdates() {
+        const response = await fetch("./pkg/hunter_game.js", {
+          method: "HEAD",
+        });
+        const currentModified = new Date(
+          response.headers.get("Last-Modified")
+        ).getTime();
+
+        if (lastModified && currentModified > lastModified) {
+          console.log("WASM module updated, reloading...");
+          location.reload();
+        }
+
+        lastModified = currentModified;
+      }
+
+      setInterval(checkForUpdates, scriptCheckInterval);
+    </script>
+  </body>
+</html>
