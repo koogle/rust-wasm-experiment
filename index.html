@@ -57,8 +57,10 @@
           await init();
 
           const canvas = document.getElementById("game-canvas");
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
+          const originalWidth = 1024; // Set this to your game's internal width
+          const originalHeight = 768; // Set this to your game's internal height
+          canvas.width = originalWidth;
+          canvas.height = originalHeight;
 
           const game = new Game();
 
@@ -70,23 +72,39 @@
 
           gameLoop();
 
-          canvas.addEventListener("mousemove", (event) => {
+          function getScaledMousePosition(event) {
             const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (event.clientX - rect.left) * scaleX;
+            const y = (event.clientY - rect.top) * scaleY;
+            return { x, y };
+          }
+
+          canvas.addEventListener("mousemove", (event) => {
+            const { x, y } = getScaledMousePosition(event);
             game.handle_mouse_move(x, y);
           });
 
           canvas.addEventListener("click", (event) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
+            const { x, y } = getScaledMousePosition(event);
             game.handle_click(x, y);
           });
 
           canvas.addEventListener("keydown", (event) => {
+            console.log(event.key);
             game.handle_keydown(event.key);
           });
+
+          // Handle window resizing
+          window.addEventListener("resize", () => {
+            const rect = canvas.getBoundingClientRect();
+            canvas.style.width = `${window.innerWidth}px`;
+            canvas.style.height = `${window.innerHeight}px`;
+          });
+
+          // Initial resize
+          window.dispatchEvent(new Event("resize"));
         } catch (error) {
           console.error("Failed to initialize game:", error);
         }

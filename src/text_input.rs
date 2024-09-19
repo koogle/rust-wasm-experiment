@@ -79,11 +79,13 @@ impl UIElement for TextInput {
             let estimated_char_width = 10.0;
             let text_width = self.value.len() as f64 * estimated_char_width;
             let cursor_x = self.x + 5.0 + text_width;
-            context.set_stroke_style(&JsValue::from_str("black"));
-            context.begin_path();
-            context.move_to(cursor_x, self.y + 5.0);
-            context.line_to(cursor_x, self.y + self.height - 5.0);
-            context.stroke();
+            context.set_fill_style(&JsValue::from_str("black"));
+            context.fill_rect(
+                cursor_x,
+                self.y + 5.0,
+                estimated_char_width,
+                self.height - 10.0,
+            );
         }
     }
 }

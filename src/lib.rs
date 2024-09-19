@@ -124,6 +124,7 @@ impl Game {
         if key == "Enter" {
             self.is_start_screen = false;
         }
+        console::log_1(&format!("Key pressed: {}", key).into());
         self.text_input.handle_key_press(&key);
     }
 
